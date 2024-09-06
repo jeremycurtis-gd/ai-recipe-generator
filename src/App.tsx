@@ -18,7 +18,10 @@ const amplifyClient = generateClient<Schema>({
 function App() {
   const [result, setResult] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [doubleResult, setDoubleResult] = useState<number | null>(null);
 
+  
+ 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
@@ -26,9 +29,17 @@ function App() {
     try {
       const formData = new FormData(event.currentTarget);
       
+
+      const ingredients = [formData.get("ingredients")?.toString() || ""];
+      console.log(ingredients);
+
       const { data, errors } = await amplifyClient.queries.askBedrock({
         ingredients: [formData.get("ingredients")?.toString() || ""],
       });
+
+      console.log ("Returned")
+      console.log (data);
+      console.log (errors);
 
       if (!errors) {
         setResult(data?.body || "No data returned");
@@ -44,6 +55,31 @@ function App() {
     }
   };
 
+  const onDoubleNumber = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoading(true);
+
+    try {
+      const formData = new FormData(event.currentTarget);
+      const number = parseFloat(formData.get("number")?.toString() || "0");
+
+      const { data, errors } = await amplifyClient.queries.doubleNumber({
+        number: number,
+      });
+
+      if (!errors) {
+        setDoubleResult(data?.result || null);
+      } else {
+        console.log(errors);
+      }
+    } catch (e) {
+      alert(`An error occurred: ${e}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   return (
     <div className="app-container">
       <div className="header-container">
@@ -55,7 +91,7 @@ function App() {
         <p className="description">
           Simply type a few ingredients using the format ingredient1,
           ingredient2, etc., and Recipe AI will generate an all-new recipe on
-          demand...
+          demand... **
         </p>
       </div>
       <form onSubmit={onSubmit} className="form-container">
@@ -83,6 +119,26 @@ function App() {
           </div>
         ) : (
           result && <p className="result">{result}</p>
+        )}
+      </div>
+   <div className="double-number-container">
+        <h2>Double a Number</h2>
+        <form onSubmit={onDoubleNumber} className="form-container">
+          <div className="search-container">
+            <input
+              type="number"
+              className="wide-input"
+              id="number"
+              name="number"
+              placeholder="Enter a number"
+            />
+            <button type="submit" className="search-button">
+              Double It
+            </button>
+          </div>
+        </form>
+        {doubleResult !== null && (
+          <p className="result">Doubled number: {doubleResult}</p>
         )}
       </div>
     </div>

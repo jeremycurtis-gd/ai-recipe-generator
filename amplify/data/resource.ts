@@ -6,6 +6,11 @@ const schema = a.schema({
     error: a.string(),
   }),
 
+  DoubleNumberResponse: a.customType({
+    result: a.float(),
+    error: a.string(),
+  }),
+
   askBedrock: a
     .query()
     .arguments({ ingredients: a.string().array() })
@@ -14,6 +19,13 @@ const schema = a.schema({
     .handler(
       a.handler.custom({ entry: "./bedrock.js", dataSource: "bedrockDS" })
     ),
+
+    doubleNumber: a
+    .query()
+    .arguments({ number: a.float() })
+    .returns(a.ref("DoubleNumberResponse"))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.custom({ entry: "./doubleNumber.js" })),
 });
 
 export type Schema = ClientSchema<typeof schema>;
