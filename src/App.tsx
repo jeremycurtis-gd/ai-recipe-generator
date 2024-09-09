@@ -16,9 +16,11 @@ const amplifyClient = generateClient<Schema>({
 });
 
 function App() {
-  const [result, setResult] = useState<string>("");
+
   const [loading, setLoading] = useState(false);
-  const [doubleResult, setDoubleResult] = useState<number | null>(null);
+  const [number1, setNumber1] = useState<number | null>(null);
+  const [number2, setNumber2] = useState<number | null>(null);
+  const [result, setResult] = useState<number | null>(null);
 
   
  
@@ -42,8 +44,7 @@ function App() {
       console.log (errors);
 
       if (!errors) {
-        setResult(data?.body || "No data returned");
-      } else {
+        setResult(data?.body ? parseFloat(data.body) : null);      } else {
         console.log(errors);
       }
 
@@ -57,25 +58,21 @@ function App() {
 
   const onDoubleNumber = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setLoading(true);
-
-    try {
-      const formData = new FormData(event.currentTarget);
-      const number = parseFloat(formData.get("number")?.toString() || "0");
-
-      const { data, errors } = await amplifyClient.queries.doubleNumber({
-        number: number,
-      });
-
-      if (!errors) {
-        setDoubleResult(data?.result || null);
-      } else {
-        console.log(errors);
+    if (number1 !== null && number2 !== null) {
+      setLoading(true);
+      try {
+        const response = await amplifyClient.queries.multiplyNumbers({ number1, number2 });
+        if (response.data?.result !== undefined) {
+          setResult(response.data.result);
+        } else {
+          setResult(null);
+        }
+      } catch (error) {
+        console.error("Error multiplying numbers:", error);
+        setResult(null);
+      } finally {
+        setLoading(false);
       }
-    } catch (e) {
-      alert(`An error occurred: ${e}`);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -125,21 +122,35 @@ function App() {
         <h2>Double a Number</h2>
         <form onSubmit={onDoubleNumber} className="form-container">
           <div className="search-container">
-            <input
-              type="number"
-              className="wide-input"
-              id="number"
-              name="number"
-              placeholder="Enter a number"
-            />
+          <input
+            type="number"
+            value={number1 ?? ""}
+            onChange={(e) => setNumber1(parseFloat(e.target.value))}
+            className="wide-input"
+            placeholder="Enter first number"
+          />
+          <input
+            type="number"
+            value={number2 ?? ""}
+            onChange={(e) => setNumber2(parseFloat(e.target.value))}
+            className="wide-input"
+            placeholder="Enter second number"
+          />
             <button type="submit" className="search-button">
               Double It
             </button>
           </div>
         </form>
-        {doubleResult !== null && (
-          <p className="result">Doubled number: {doubleResult}</p>
+        <div className="result-container">
+        {loading ? (
+          <div className="loader-container">
+            <p>Loading...</p>
+            <Loader size="large" />
+          </div>
+        ) : (
+          result !== null && <p className="result">Product: {result}</p>
         )}
+      </div>
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ const schema = a.schema({
     error: a.string(),
   }),
 
-  DoubleNumberResponse: a.customType({
+  MultiplyNumbersResponse: a.customType({
     result: a.float(),
     error: a.string(),
   }),
@@ -20,10 +20,10 @@ const schema = a.schema({
       a.handler.custom({ entry: "./bedrock.js", dataSource: "bedrockDS" })
     ),
 
-    doubleNumber: a
+    multiplyNumbers: a
     .query()
-    .arguments({ number: a.float() })
-    .returns(a.ref("DoubleNumberResponse"))
+    .arguments({ number1: a.float(), number2: a.float() })
+    .returns(a.ref("MultiplyNumbersResponse"))
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.custom({ entry: "./doubleNumber.js" })),
 });
